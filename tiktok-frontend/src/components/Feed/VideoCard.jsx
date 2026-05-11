@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react"
 import { Heart, MessageCircle, Share2, Music } from "lucide-react"
 import axios from "../../api/axios"
-import CommentDrawer from "./CommentDrawer" // Ensure you created this file
+import CommentDrawer from "./CommentDrawer"
 
 const VideoCard = ({ reel }) => {
   const [playing, setPlaying] = useState(false)
@@ -10,7 +10,6 @@ const VideoCard = ({ reel }) => {
   const [showHeart, setShowHeart] = useState(false)
   const [lastTap, setLastTap] = useState(0)
 
-  // Comment Drawer State
   const [isCommentOpen, setIsCommentOpen] = useState(false)
   const [currentComments, setCurrentComments] = useState(reel.comments || [])
 
@@ -55,7 +54,7 @@ const VideoCard = ({ reel }) => {
         post: postId,
         body: text,
       })
-      // Prepend the new comment so it shows at the top
+
       setCurrentComments([response.data, ...currentComments])
     } catch (err) {
       console.error("Failed to post comment:", err)
