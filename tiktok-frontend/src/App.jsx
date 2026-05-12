@@ -1,44 +1,62 @@
 import { useState, useEffect } from "react"
 import Navbar from "./components/Navigation/Navbar"
 import VideoCard from "./components/Feed/VideoCard"
-import Profile from "./components/Profile/Profile"
+import AuthModal from "./components/Auth/AuthModal" // New combined modal
 import UploadModal from "./components/Feed/UploadModal"
-import Login from "./components/Auth/Login"
 import axios from "./api/axios"
 
 function App() {
   const [view, setView] = useState("home")
   const [reels, setReels] = useState([])
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [isUploadOpen, setIsUploadOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("token")
   )
 
+  // Fetch reels regardless of auth status (Guest Read CRUD)
   useEffect(() => {
-    if (isAuthenticated && view === "home") {
-      axios.get("/reels/").then((res) => setReels(res.data.results))
+    const fetchReels = async () => {
+      try {
+        const res = await axios.get("/reels/")
+        setReels(res.data.results)
+      } catch (err) {
+        console.error("Error fetching reels", err)
+      }
     }
-  }, [view, isAuthenticated])
+    fetchReels()
+  }, [])
 
-  if (!isAuthenticated)
-    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />
+  // Centralized "Guard" function
+  const requireAuth = (action) => {
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true)
+    } else {
+      action()
+    }
+  }
 
   return (
     <div className="bg-black min-h-screen">
       {view === "home" && (
         <div className="h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth pb-16">
           {reels.map((reel) => (
-            <VideoCard key={reel.id} reel={reel} />
+            <VideoCard
+              key={reel.id}
+              reel={reel}
+              onInteractionRequirement={() => setIsAuthModalOpen(true)}
+              isAuthenticated={isAuthenticated}
+            />
           ))}
         </div>
       )}
 
-      {view === "profile" && <Profile />}
-      {view === "chat" && (
-        <div className="text-white text-center pt-20">
-          Chat Feature Coming Next!
-        </div>
-      )}
+      {/* Auth Modal handles Login/Signup toggling */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={() => setIsAuthenticated(true)}
+      />
 
       <UploadModal
         isOpen={isUploadOpen}
@@ -47,8 +65,8 @@ function App() {
       />
 
       <Navbar
-        onTabChange={setView}
-        onUploadClick={() => setIsUploadOpen(true)}
+        onTabChange={(tab) => requireAuth(() => setView(tab))}
+        onUploadClick={() => requireAuth(() => setIsUploadOpen(true))}
       />
     </div>
   )

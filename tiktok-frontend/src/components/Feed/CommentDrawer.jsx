@@ -1,68 +1,63 @@
 import React, { useState } from "react"
-import { X, Send } from "lucide-react"
 
 const CommentDrawer = ({ isOpen, onClose, comments, reelId, onAddComment }) => {
-  const [newComment, setNewComment] = useState("")
+  const [text, setText] = useState("")
 
   if (!isOpen) return null
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!newComment.trim()) return
-    onAddComment(reelId, newComment)
-    setNewComment("")
-  }
-
   return (
-    <div className="absolute inset-0 z-50 flex flex-col justify-end bg-black/40">
-      {/* Click overlay to close */}
-      <div className="flex-1" onClick={onClose}></div>
-
-      {/* Drawer Content */}
-      <div className="bg-white rounded-t-xl h-[70%] flex flex-col text-black animate-slide-up">
-        <div className="flex items-center justify-between p-4 border-b">
-          <span className="font-bold text-sm">{comments.length} comments</span>
-          <X className="cursor-pointer" onClick={onClose} />
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg bg-[#121212]/95 backdrop-blur-xl rounded-t-2xl h-[70vh] flex flex-col animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-4 border-b border-gray-800 text-center font-bold text-sm text-white">
+          {comments.length} comments
+          <button onClick={onClose} className="absolute right-4 text-gray-400">
+            ✕
+          </button>
         </div>
 
-        {/* Comments List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {comments.map((comment) => (
-            <div key={comment.id} className="flex space-x-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 text-white">
+          {comments.map((c) => (
+            <div key={c.id} className="flex gap-3">
               <img
                 src={
-                  comment.user.profile?.profile_picture_url ||
+                  c.user?.profile?.profile_picture_url ||
                   "https://via.placeholder.com/150"
                 }
-                className="w-8 h-8 rounded-full object-cover"
-                alt="user"
+                className="w-8 h-8 rounded-full"
               />
               <div>
-                <p className="text-xs font-bold text-gray-500">
-                  @{comment.user.username}
+                <p className="text-xs text-gray-500 font-bold">
+                  @{c.user?.username}
                 </p>
-                <p className="text-sm">{comment.body}</p>
+                <p className="text-sm mt-1">{c.body}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Input Area */}
-        <form
-          onSubmit={handleSubmit}
-          className="p-4 border-t flex items-center space-x-2"
-        >
+        <div className="p-4 border-t border-gray-800 flex gap-2">
           <input
-            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="flex-1 bg-gray-900 p-2 rounded-full px-4 text-sm outline-none text-white"
             placeholder="Add comment..."
-            className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
           />
-          <button type="submit" className="text-[#fe2c55]">
-            <Send size={20} />
+          <button
+            onClick={() => {
+              onAddComment(reelId, text)
+              setText("")
+            }}
+            className="text-[#fe2c55] font-bold px-2"
+          >
+            Post
           </button>
-        </form>
+        </div>
       </div>
     </div>
   )
