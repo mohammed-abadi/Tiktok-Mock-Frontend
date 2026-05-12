@@ -6,7 +6,6 @@ const ChatBox = ({ roomId, currentUsername }) => {
   const socketRef = useRef(null)
 
   useEffect(() => {
-    // Replace with your Render URL (wss://)
     const wsUrl = `wss://tiktok-mock-db.onrender.com/ws/chat/${roomId}/`
     socketRef.current = new WebSocket(wsUrl)
 
