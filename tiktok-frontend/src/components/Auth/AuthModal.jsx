@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import Login from "./Login"
 import Signup from "./Signup"
 
-const AuthModal = ({ isOpen, onClose }) => {
+const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [isLoginView, setIsLoginView] = useState(true)
 
   if (!isOpen) return null
@@ -17,7 +17,11 @@ const AuthModal = ({ isOpen, onClose }) => {
           ✕
         </button>
 
-        {isLoginView ? <Login /> : <Signup />}
+        {isLoginView ? (
+          <Login onLoginSuccess={onLoginSuccess} />
+        ) : (
+          <Signup onLoginSuccess={onLoginSuccess} />
+        )}
 
         <div className="mt-6 text-center text-sm text-gray-400">
           {isLoginView ? "Don't have an account?" : "Already have an account?"}

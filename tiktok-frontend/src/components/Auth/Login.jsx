@@ -3,45 +3,55 @@ import axios from "../../api/axios"
 
 const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({ username: "", password: "" })
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
     try {
-      // Hits TokenObtainPairView in your Django urls.py
       const res = await axios.post("/token/", formData)
+
+      // 1. Save the token and username
       localStorage.setItem("token", res.data.access)
-      localStorage.setItem("refresh", res.data.refresh)
-      onLoginSuccess()
+      localStorage.setItem("username", formData.username)
+
+      // 2. Trigger the success function from App.jsx
+      if (onLoginSuccess) {
+        onLoginSuccess()
+      }
     } catch (err) {
+      // This alert is what you are seeing in your screenshot
       alert("Invalid username or password.")
+      console.error(err)
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="h-screen bg-black flex flex-col items-center justify-center text-white p-6">
-      <h2 className="text-3xl font-bold mb-8">Log in</h2>
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <input
-          type="text"
-          placeholder="Username"
-          className="w-full p-4 bg-gray-900 border border-gray-800 rounded-lg outline-none focus:border-[#fe2c55]"
-          onChange={(e) =>
-            setFormData({ ...formData, username: e.target.value })
-          }
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-4 bg-gray-900 border border-gray-800 rounded-lg outline-none focus:border-[#fe2c55]"
-          onChange={(e) =>
-            setFormData({ ...formData, password: e.target.value })
-          }
-        />
-        <button className="w-full bg-[#fe2c55] p-4 rounded-lg font-bold text-lg hover:brightness-110">
-          Log In
-        </button>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+      <h2 className="text-xl font-bold text-white mb-2 text-center">Log in</h2>
+      <input
+        placeholder="Username"
+        className="bg-gray-900 p-3 rounded border border-gray-800 text-white outline-none focus:border-[#fe2c55]"
+        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        className="bg-gray-900 p-3 rounded border border-gray-800 text-white outline-none focus:border-[#fe2c55]"
+        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+        required
+      />
+      <button
+        type="submit"
+        disabled={loading}
+        className="bg-[#fe2c55] font-bold p-3 rounded text-white"
+      >
+        {loading ? "Logging in..." : "Log In"}
+      </button>
+    </form>
   )
 }
 

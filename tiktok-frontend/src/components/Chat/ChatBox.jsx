@@ -1,30 +1,35 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
+import { useParams, useNavigate } from "react-router-dom"
 
-const ChatBox = ({ roomId, currentUsername }) => {
+const ChatBox = ({ currentUsername }) => {
+  const { roomId } = useParams()
+  const navigate = useNavigate()
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState("")
-  const [socket, setSocket] = useState(null)
+  const socketRef = useRef(null)
 
   useEffect(() => {
-    const wsPath = `wss://your-app-name.onrender.com/ws/chat/${roomId}/`
+    const wsPath = `${import.meta.env.VITE_WS_URL}/${roomId}/`
     const newSocket = new WebSocket(wsPath)
 
     newSocket.onmessage = (e) => {
       const data = JSON.parse(e.data)
-      setMessages((prev) => [...prev, data])
+      if (data.message) setMessages((prev) => [...prev, data])
     }
 
-    setSocket(newSocket)
-    return () => newSocket.close()
+    socketRef.current = newSocket
+    return () => {
+      if (socketRef.current) socketRef.current.close()
+    }
   }, [roomId])
 
   const sendMessage = () => {
-    if (socket && input) {
-      socket.send(
+    if (socketRef.current?.readyState === WebSocket.OPEN && input.trim()) {
+      socketRef.current.send(
         JSON.stringify({
           message: input,
           username: currentUsername,
-          room_id: roomId,
+          conversation_id: roomId,
         })
       )
       setInput("")
@@ -32,28 +37,49 @@ const ChatBox = ({ roomId, currentUsername }) => {
   }
 
   return (
-    <div className="flex flex-col h-[400px] bg-gray-900 p-4 rounded-lg">
-      <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+    <div className="flex flex-col h-full bg-black border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
+      <div className="p-4 border-b border-gray-800 bg-gray-900/50 flex items-center gap-4">
+        <button onClick={() => navigate("/inbox")} className="text-white">
+          ←
+        </button>
+        <h3 className="text-sm font-bold text-white lowercase">
+          Conversation #{roomId}
+        </h3>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`p-2 rounded ${msg.username === currentUsername ? "bg-blue-600 ml-auto" : "bg-gray-700"} max-w-[80%]`}
+            className={`flex flex-col ${msg.username === currentUsername ? "items-end" : "items-start"}`}
           >
-            <p className="text-xs text-gray-400">{msg.username}</p>
-            <p>{msg.message}</p>
+            <span className="text-[10px] text-gray-500 mb-1">
+              {msg.username}
+            </span>
+            <div
+              className={`px-4 py-2 rounded-2xl text-sm max-w-[85%] ${
+                msg.username === currentUsername
+                  ? "bg-[#fe2c55] text-white"
+                  : "bg-gray-800 text-gray-200"
+              }`}
+            >
+              {msg.message}
+            </div>
           </div>
         ))}
       </div>
-      <div className="flex space-x-2">
+
+      <div className="p-4 bg-gray-900/50 border-t border-gray-800 flex gap-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="flex-1 bg-black p-2 rounded outline-none"
-          placeholder="Type a message..."
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          className="flex-1 bg-black py-2 px-4 text-sm text-white outline-none rounded-full border border-gray-700"
+          placeholder="Send a message..."
         />
         <button
           onClick={sendMessage}
-          className="bg-[#fe2c55] px-4 rounded font-bold"
+          className="text-[#fe2c55] font-bold text-sm"
         >
           Send
         </button>

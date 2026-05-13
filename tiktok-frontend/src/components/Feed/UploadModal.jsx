@@ -2,7 +2,6 @@ import React, { useState } from "react"
 import axios from "../../api/axios"
 import { X } from "lucide-react"
 
-// 1. MUST BE DEFINED HERE
 const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
   const [caption, setCaption] = useState("")
   const [videoUrl, setVideoUrl] = useState("")
