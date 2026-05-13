@@ -37,7 +37,6 @@ const Signup = ({ onLoginSuccess }) => {
         setError("Account created! Please switch to Log In.")
       }
     } catch (err) {
-      console.error(err)
       setError(
         err.response?.data?.username?.[0] ||
           err.response?.data?.email?.[0] ||

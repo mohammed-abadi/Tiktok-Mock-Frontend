@@ -10,20 +10,15 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true)
     try {
       const res = await axios.post("/token/", formData)
-
-      // 1. Save the access token, REFRESH token, and username
       localStorage.setItem("token", res.data.access)
-      localStorage.setItem("refreshToken", res.data.refresh) // ADDED THIS LINE
+      localStorage.setItem("refreshToken", res.data.refresh)
       localStorage.setItem("username", formData.username)
 
-      // 2. Trigger the success function from App.jsx
       if (onLoginSuccess) {
         onLoginSuccess()
       }
     } catch (err) {
-      // This alert shows if the backend rejects the credentials
       alert("Invalid username or password.")
-      console.error("Login Error:", err)
     } finally {
       setLoading(false)
     }

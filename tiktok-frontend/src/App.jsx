@@ -14,6 +14,7 @@ import Discovery from "./components/Feed/Discovery"
 import Profile from "./components/Profile/Profile"
 import ChatBox from "./components/Chat/ChatBox"
 import InboxList from "./components/Chat/InboxList"
+import Activity from "./components/Feed/Activity"
 import axios from "./api/axios"
 
 const AppContent = () => {
@@ -23,19 +24,15 @@ const AppContent = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("token")
   )
-
   const location = useLocation()
 
   useEffect(() => {
-    if (location.state?.openLogin) {
-      setIsAuthModalOpen(true)
-    }
+    if (location.state?.openLogin) setIsAuthModalOpen(true)
   }, [location])
 
   useEffect(() => {
-    const handleStorageChange = () => {
+    const handleStorageChange = () =>
       setIsAuthenticated(!!localStorage.getItem("token"))
-    }
     window.addEventListener("storage", handleStorageChange)
     return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
@@ -45,9 +42,7 @@ const AppContent = () => {
       try {
         const res = await axios.get("/posts/")
         setReels(res.data.results || res.data)
-      } catch (err) {
-        console.error("Error fetching reels:", err)
-      }
+      } catch (err) {}
     }
     fetchReels()
   }, [])
@@ -65,7 +60,7 @@ const AppContent = () => {
           <Route
             path="/"
             element={
-              <div className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth pb-16">
+              <div className="h-[100dvh] w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth hide-scrollbar bg-black pb-16">
                 {reels.map((reel) => (
                   <VideoCard
                     key={reel.id}
@@ -77,9 +72,17 @@ const AppContent = () => {
               </div>
             }
           />
-
           <Route path="/discover" element={<Discovery />} />
-
+          <Route
+            path="/activity"
+            element={
+              isAuthenticated ? (
+                <Activity />
+              ) : (
+                <Navigate to="/" state={{ openLogin: true }} replace />
+              )
+            }
+          />
           <Route
             path="/inbox"
             element={
@@ -90,12 +93,11 @@ const AppContent = () => {
               )
             }
           />
-
           <Route
             path="/inbox/:roomId"
             element={
               isAuthenticated ? (
-                <div className="p-4 h-full">
+                <div className="p-4 h-[100dvh]">
                   <ChatBox currentUsername={localStorage.getItem("username")} />
                 </div>
               ) : (
@@ -103,9 +105,8 @@ const AppContent = () => {
               )
             }
           />
-
           <Route
-            path="/profile"
+            path="/profile/:id?"
             element={
               isAuthenticated ? (
                 <Profile onLogout={handleLogout} />
@@ -125,7 +126,6 @@ const AppContent = () => {
           setIsAuthModalOpen(false)
         }}
       />
-
       <UploadModal
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
@@ -134,7 +134,6 @@ const AppContent = () => {
           setIsUploadOpen(false)
         }}
       />
-
       <Navbar
         isAuthenticated={isAuthenticated}
         openAuth={() => setIsAuthModalOpen(true)}
@@ -143,13 +142,10 @@ const AppContent = () => {
     </div>
   )
 }
-
-function App() {
+export default function App() {
   return (
     <Router>
       <AppContent />
     </Router>
   )
 }
-
-export default App
