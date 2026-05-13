@@ -11,8 +11,9 @@ const Login = ({ onLoginSuccess }) => {
     try {
       const res = await axios.post("/token/", formData)
 
-      // 1. Save the token and username
+      // 1. Save the access token, REFRESH token, and username
       localStorage.setItem("token", res.data.access)
+      localStorage.setItem("refreshToken", res.data.refresh) // ADDED THIS LINE
       localStorage.setItem("username", formData.username)
 
       // 2. Trigger the success function from App.jsx
@@ -20,9 +21,9 @@ const Login = ({ onLoginSuccess }) => {
         onLoginSuccess()
       }
     } catch (err) {
-      // This alert is what you are seeing in your screenshot
+      // This alert shows if the backend rejects the credentials
       alert("Invalid username or password.")
-      console.error(err)
+      console.error("Login Error:", err)
     } finally {
       setLoading(false)
     }
@@ -47,7 +48,11 @@ const Login = ({ onLoginSuccess }) => {
       <button
         type="submit"
         disabled={loading}
-        className="bg-[#fe2c55] font-bold p-3 rounded text-white"
+        className={`font-bold p-3 rounded text-white transition-all ${
+          loading
+            ? "bg-gray-600 cursor-not-allowed"
+            : "bg-[#fe2c55] active:scale-95"
+        }`}
       >
         {loading ? "Logging in..." : "Log In"}
       </button>
