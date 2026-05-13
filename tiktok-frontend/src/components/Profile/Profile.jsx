@@ -336,6 +336,13 @@ const Profile = ({ onLogout }) => {
                       src={item.media_url}
                       className="w-full h-full object-cover"
                       muted
+                      loop
+                      playsInline
+                      onMouseEnter={(e) => e.target.play()}
+                      onMouseLeave={(e) => {
+                        e.target.pause()
+                        e.target.currentTime = 0
+                      }}
                     />
                   )}
                 </div>
