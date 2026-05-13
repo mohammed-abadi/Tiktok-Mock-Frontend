@@ -1,51 +1,98 @@
 import React, { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import axios from "../../api/axios"
 
-const Signup = ({ onToggle }) => {
-  const [formData, setFormData] = useState({ username: "", password: "" })
+const Signup = () => {
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    name: "",
+    password: "",
+    password_confirm: "",
+    profile_picture_url: "",
+  })
+  const [error, setError] = useState("")
+  const navigate = useNavigate()
 
-  const handleSignup = async (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    if (formData.password !== formData.password_confirm) {
+      return setError("Passwords do not match")
+    }
     try {
       await axios.post("/signup/", formData)
-      alert("Account created! Please log in.")
-      onToggle() // Switch to login view
+      navigate("/login")
     } catch (err) {
-      alert("Signup failed. Username might be taken.")
+      setError(
+        err.response?.data?.email ||
+          err.response?.data?.username ||
+          "Signup failed"
+      )
     }
   }
 
   return (
-    <div className="h-screen bg-black flex flex-col items-center justify-center text-white p-6">
-      <h2 className="text-3xl font-bold mb-8">Sign up</h2>
-      <form onSubmit={handleSignup} className="w-full max-w-sm space-y-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
+      <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
+        <h2 className="text-2xl font-bold text-center">Create Account</h2>
+        {error && <p className="text-red-500 text-center">{error}</p>}
         <input
-          type="text"
-          placeholder="Choose Username"
-          className="w-full p-4 bg-gray-900 border border-gray-800 rounded-lg outline-none"
-          onChange={(e) =>
-            setFormData({ ...formData, username: e.target.value })
-          }
+          name="name"
+          placeholder="Full Name"
+          onChange={handleChange}
+          className="w-full p-2 bg-gray-900 rounded border border-gray-700"
+          required
         />
         <input
+          name="email"
+          type="email"
+          placeholder="Email Address"
+          onChange={handleChange}
+          className="w-full p-2 bg-gray-900 rounded border border-gray-700"
+          required
+        />
+        <input
+          name="username"
+          placeholder="Username"
+          onChange={handleChange}
+          className="w-full p-2 bg-gray-900 rounded border border-gray-700"
+          required
+        />
+        <input
+          name="password"
           type="password"
-          placeholder="Choose Password"
-          className="w-full p-4 bg-gray-900 border border-gray-800 rounded-lg outline-none"
-          onChange={(e) =>
-            setFormData({ ...formData, password: e.target.value })
-          }
+          placeholder="Password"
+          onChange={handleChange}
+          className="w-full p-2 bg-gray-900 rounded border border-gray-700"
+          required
         />
-        <button className="w-full bg-[#fe2c55] p-4 rounded-lg font-bold">
+        <input
+          name="password_confirm"
+          type="password"
+          placeholder="Confirm Password"
+          onChange={handleChange}
+          className="w-full p-2 bg-gray-900 rounded border border-gray-700"
+          required
+        />
+        <input
+          name="profile_picture_url"
+          placeholder="Profile Picture URL (Optional)"
+          onChange={handleChange}
+          className="w-full p-2 bg-gray-900 rounded border border-gray-700"
+        />
+        <button
+          type="submit"
+          className="w-full p-2 bg-[#fe2c55] rounded font-bold"
+        >
           Sign Up
         </button>
-        <p
-          className="text-center text-sm text-gray-400 mt-4 cursor-pointer"
-          onClick={onToggle}
-        >
-          Already have an account? Log in
-        </p>
       </form>
     </div>
   )
 }
+
 export default Signup

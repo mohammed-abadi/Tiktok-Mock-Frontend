@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import Navbar from "./components/Navigation/Navbar"
 import VideoCard from "./components/Feed/VideoCard"
-import AuthModal from "./components/Auth/AuthModal" // New combined modal
+import AuthModal from "./components/Auth/AuthModal"
 import UploadModal from "./components/Feed/UploadModal"
+import Discovery from "./components/Feed/Discovery"
+import Profile from "./components/Profile/Profile"
+import ChatBox from "./components/Chat/ChatBox"
 import axios from "./api/axios"
 
 function App() {
@@ -14,20 +17,19 @@ function App() {
     !!localStorage.getItem("token")
   )
 
-  // Fetch reels regardless of auth status (Guest Read CRUD)
   useEffect(() => {
     const fetchReels = async () => {
       try {
-        const res = await axios.get("/reels/")
-        setReels(res.data.results)
+        const res = await axios.get("/posts/")
+        setReels(res.data.results || res.data)
       } catch (err) {
         console.error("Error fetching reels", err)
       }
     }
     fetchReels()
-  }, [])
+  }, [view])
 
-  // Centralized "Guard" function
+  // Centralized Guard
   const requireAuth = (action) => {
     if (!isAuthenticated) {
       setIsAuthModalOpen(true)
@@ -37,21 +39,36 @@ function App() {
   }
 
   return (
-    <div className="bg-black min-h-screen">
-      {view === "home" && (
-        <div className="h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth pb-16">
-          {reels.map((reel) => (
-            <VideoCard
-              key={reel.id}
-              reel={reel}
-              onInteractionRequirement={() => setIsAuthModalOpen(true)}
-              isAuthenticated={isAuthenticated}
-            />
-          ))}
-        </div>
-      )}
+    <div className="bg-black min-h-screen text-white flex flex-col">
+      <div className="flex-1 overflow-hidden">
+        {view === "home" && (
+          <div className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth pb-16">
+            {reels.map((reel) => (
+              <VideoCard
+                key={reel.id}
+                reel={reel}
+                onInteractionRequirement={() => setIsAuthModalOpen(true)}
+                isAuthenticated={isAuthenticated}
+              />
+            ))}
+          </div>
+        )}
 
-      {/* Auth Modal handles Login/Signup toggling */}
+        {view === "discover" && <Discovery />}
+
+        {view === "inbox" && <ChatBox roomId={1} />}
+
+        {view === "profile" && (
+          <Profile
+            onLogout={() => {
+              localStorage.removeItem("token")
+              setIsAuthenticated(false)
+              setView("home")
+            }}
+          />
+        )}
+      </div>
+
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
@@ -65,10 +82,18 @@ function App() {
       />
 
       <Navbar
-        onTabChange={(tab) => requireAuth(() => setView(tab))}
+        currentView={view}
+        onTabChange={(tab) => {
+          if (tab === "inbox" || tab === "profile") {
+            requireAuth(() => setView(tab))
+          } else {
+            setView(tab)
+          }
+        }}
         onUploadClick={() => requireAuth(() => setIsUploadOpen(true))}
       />
     </div>
   )
 }
+
 export default App
